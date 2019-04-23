@@ -96,3 +96,6 @@ class FNEmbeddingsGenerator:
             (self.__tf_sess.run(self.__embeddings,
                                 feed_dict={self.__images_placeholder: inference.get_data(),
                                            self.__phase_train_placeholder: False}), inference))
+
+    def stop(self):
+        self.__thread = None

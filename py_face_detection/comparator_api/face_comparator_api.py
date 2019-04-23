@@ -189,11 +189,13 @@ def step_3():
         if ret:
             embedding = inference.get_result()
             face = inference.get_input()
-            cv2.imshow("face", face)
-            cv2.waitKey(1)
+            # cv2.imshow("face", face)
+            # cv2.waitKey(1)
             # print(embedding)
             dist = np.sqrt(np.sum(np.square(np.subtract(embedding, tj))))
-            print(dist)
+
+
+
 
 
 Thread(target=step_1).start()

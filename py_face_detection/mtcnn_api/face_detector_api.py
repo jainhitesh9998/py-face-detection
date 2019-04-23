@@ -103,3 +103,6 @@ class FaceDetectorMTCNN():
 
         self.__out_pipe.push((faces, inference))
 
+    def stop(self):
+        self.__thread = None
+
