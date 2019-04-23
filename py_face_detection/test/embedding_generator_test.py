@@ -35,7 +35,7 @@ def run():
             image = inference.get_meta('face_image')
             cv2.imshow("face", image)
             if cv2.waitKey(1) == ord('q'):
-                print(embedding)
+                print(str(embedding))
 
 
 Thread(target=run).start()
