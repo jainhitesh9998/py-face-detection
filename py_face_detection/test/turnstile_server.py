@@ -30,14 +30,46 @@ pipe = Pipe(limit=1)
 fs = FlaskMovie(app=app)
 fs.create('face_image', pipe, np.zeros((160, 160, 3)), timeout=1)
 
+import os
+
+
+def get_cam_id():
+    dict = {}
+    for file in os.listdir("/sys/class/video4linux"):
+        if not file.startswith("video"):
+            continue
+        try:
+            real_file = os.path.realpath("/sys/class/video4linux/" + file)
+            dir = os.path.abspath(real_file + "../../../../")
+            serial = open(dir + "/serial").readline().strip()
+            index = file.replace("video", "")
+            dict.update({serial: int(index)})
+
+        except:
+            continue
+    return dict
+
+
+cam_dict = get_cam_id()
+
+caps = {
+    'BUILDING_IN': cv2.VideoCapture(cam_dict['D181B16F']),
+    'BUILDING_OUT': cv2.VideoCapture(cam_dict['811BF06F']),
+}
+
+
+def capture(direction):
+    cap = caps[direction]
+    ret, image = cap.read()
+    cap.release()
+    return ret, image
+
 
 @app.route('/<emp_id>/<direction>')
 def processReq(emp_id, direction):
-    cap = cv2.VideoCapture(-1)
-    ret, image = cap.read()
+    ret, image = capture(direction)
     if not ret:
         return Response(json.dumps("{'none': none }"), status=200, mimetype='application/json')
-    cap.release()
 
     inference = EmbeddingGenerator.Inference(image)
     generator_ip.push(inference)
@@ -54,7 +86,6 @@ def processReq(emp_id, direction):
             return Response(json.dumps("{'result': valid }"), status=200, mimetype='application/json')
         return Response(json.dumps("{'result': invalid }"), status=200, mimetype='application/json')
     return Response(json.dumps("{'result': unknown }"), status=200, mimetype='application/json')
-
 
 
 if __name__ == '__main__':

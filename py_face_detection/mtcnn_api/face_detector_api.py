@@ -1,7 +1,10 @@
 from py_data.data import Data
+
 DATA = Data()
 DATA.create_dir('pretrained/align')
 
+import os
+import tensorflow as tf
 from threading import Thread
 import cv2
 import numpy as np
@@ -16,6 +19,7 @@ threshold = [0.6, 0.7, 0.7]
 factor = 0.709
 margin = 44
 input_image_size = 160
+
 
 class FaceDetectorMTCNN():
     class Inference(Inference):
@@ -36,7 +40,6 @@ class FaceDetectorMTCNN():
             self.__graph_prefix = ''
         else:
             self.__graph_prefix = graph_prefix + '/'
-
 
     def __in_pipe_process(self, inference):
         img = inference.get_input()
@@ -106,3 +109,26 @@ class FaceDetectorMTCNN():
     def stop(self):
         self.__thread = None
 
+    def save_for_serving(self, save_path, model_version):
+        path = os.path.join(save_path, str(model_version))
+        builder = tf.saved_model.builder.SavedModelBuilder(path)
+
+        prediction_signature = tf.saved_model.signature_def_utils.build_signature_def(
+            inputs={'images': tf.saved_model.utils.build_tensor_info(self.__images_placeholder),
+                    'phase': tf.saved_model.utils.build_tensor_info(self.__phase_train_placeholder)},
+            outputs={
+                'embeddings': tf.saved_model.utils.build_tensor_info(self.__embeddings)
+            },
+            method_name=tf.saved_model.signature_constants.PREDICT_METHOD_NAME)
+
+        legacy_init_op = tf.group(
+            tf.tables_initializer(), name='legacy_init_op')
+
+        builder.add_meta_graph_and_variables(
+            self.__tf_sess, [tf.saved_model.tag_constants.SERVING],
+            signature_def_map={
+                'calculate_embeddings': prediction_signature,
+            })
+
+        builder.save()
+        print("model saved successfullt")

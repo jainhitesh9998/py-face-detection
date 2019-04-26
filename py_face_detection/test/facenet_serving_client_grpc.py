@@ -14,10 +14,10 @@ import os
 import numpy as np
 from scipy import misc
 
-tf.app.flags.DEFINE_string('server', 'localhost:8500',
-                           'PredictionService host:port')
-tf.app.flags.DEFINE_string('image', '/home/vivek/serving-1.4.0/test.jpeg', 'path to image in JPEG format')
-FLAGS = tf.app.flags.FLAGS
+# tf.app.flags.DEFINE_string('server', 'localhost:8500',
+#                            'PredictionService host:port')
+# tf.app.flags.DEFINE_string('image', '/home/vivek/serving-1.4.0/test.jpeg', 'path to image in JPEG format')
+# FLAGS = tf.app.flags.FLAGS
 
 def prewhiten(x):
     mean = np.mean(x)
@@ -28,15 +28,15 @@ def prewhiten(x):
 
 
 def main(_):
-  host, port = FLAGS.server.split(':')
-  channel = implementations.insecure_channel(host, int(port))
+  # host, port = FLAGS.server.split(':')
+  channel = implementations.insecure_channel('localhost', 8500)
   stub = prediction_service_pb2.beta_create_PredictionService_stub(channel)
   request = predict_pb2.PredictRequest()
   request.model_spec.name = 'facenet'
   request.model_spec.signature_name = 'calculate_embeddings'
   im = cv2.imread("/home/developer/PycharmProjects/facematch/images/ab_1.jpg")
   im_resized=None
-  # im = cv2.resize(im, (160,160))
+  im = cv2.resize(im, (160,160))
   request.inputs['images'].CopyFrom(tf.contrib.util.make_tensor_proto(im, shape=[1, im.shape[0], im.shape[1], im.shape[2]], dtype=tf.float32))
   request.inputs['phase'].CopyFrom(tf.contrib.util.make_tensor_proto(False))
   while True:
@@ -46,7 +46,7 @@ def main(_):
       # print(response)
       print(response.shape)
       print(type(response))
-      print(start - time.time())
+      print(time.time()-start)
 
 if __name__ == '__main__':
   tf.app.run()

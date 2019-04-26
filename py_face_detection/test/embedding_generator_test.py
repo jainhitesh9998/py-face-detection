@@ -20,8 +20,10 @@ def read():
     while True:
         generator_ip.push_wait()
         ret, image = cap.read()
+        # ret, image = True, cv2.imread("/home/developer/PycharmProjects/facematch/images/ab_1.jpg")
         if not ret:
             continue
+        # image = cv2.resize(image, (160, 160))
         inference = EmbeddingGenerator.Inference(image)
         generator_ip.push(inference)
 

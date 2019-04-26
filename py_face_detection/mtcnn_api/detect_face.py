@@ -291,6 +291,8 @@ def create_mtcnn(sess, model_path):
         data = tf.placeholder(tf.float32, (None,48,48,3), 'input')
         onet = ONet({'data':data})
         onet.load(os.path.join(model_path, 'det3.npy'), sess)
+
+
         
     pnet_fun = lambda img : sess.run(('pnet/conv4-2/BiasAdd:0', 'pnet/prob1:0'), feed_dict={'pnet/input:0':img})
     rnet_fun = lambda img : sess.run(('rnet/conv5-2/conv5-2:0', 'rnet/prob1:0'), feed_dict={'rnet/input:0':img})
