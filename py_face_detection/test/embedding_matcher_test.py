@@ -41,7 +41,7 @@ def run():
             dist = {}
             for key in emp.keys():
                 d = np.sqrt(np.sum(np.square(np.subtract(embedding, emp[key]))))
-                if d < 0.65:
+                if d < 0.85:
                     dist[key] = d
             dist = sorted(dist.items(), key=lambda kv: kv[1])
             if len(dist) > 0:

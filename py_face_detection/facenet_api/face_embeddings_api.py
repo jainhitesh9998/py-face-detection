@@ -1,6 +1,10 @@
 from py_data.data import Data
+
 DATA = Data()
 DATA.create_dir('pretrained/facenet')
+
+import os
+import tensorflow as tf
 
 from threading import Thread
 from py_pipe.pipe import Pipe
@@ -99,3 +103,27 @@ class FNEmbeddingsGenerator:
 
     def stop(self):
         self.__thread = None
+
+    def save_for_serving(self, save_path, model_version):
+        path = os.path.join(save_path, str(model_version))
+        builder = tf.saved_model.builder.SavedModelBuilder(path)
+
+        prediction_signature = tf.saved_model.signature_def_utils.build_signature_def(
+            inputs={'images': tf.saved_model.utils.build_tensor_info(self.__images_placeholder),
+                    'phase': tf.saved_model.utils.build_tensor_info(self.__phase_train_placeholder)},
+            outputs={
+                'embeddings': tf.saved_model.utils.build_tensor_info(self.__embeddings)
+            },
+            method_name=tf.saved_model.signature_constants.PREDICT_METHOD_NAME)
+
+        legacy_init_op = tf.group(
+            tf.tables_initializer(), name='legacy_init_op')
+
+        builder.add_meta_graph_and_variables(
+            self.__tf_sess, [tf.saved_model.tag_constants.SERVING],
+            signature_def_map={
+                'calculate_embeddings': prediction_signature,
+            })
+
+        builder.save()
+        print("model saved successfullt")
