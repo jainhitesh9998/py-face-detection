@@ -48,6 +48,7 @@ class FNEmbeddingsGenerator:
         resized = inference.get_input()
         prewhitened = facenet.prewhiten(resized)
         reshaped = prewhitened.reshape(-1, input_image_size, input_image_size, 3)
+        # print(reshaped.shape)
         inference.set_data(reshaped)
         return inference
 

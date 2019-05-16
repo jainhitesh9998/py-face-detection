@@ -14,12 +14,12 @@ from py_face_detection.mtcnn_api import detect_face
 from proj_data.py_face_detection.pretrained.align import path as align_path
 
 # some constants kept as default from facenet
-minsize = 20
+minsize = 30
 threshold = [0.6, 0.7, 0.7]
 factor = 0.709
 margin = 44
 input_image_size = 160
-
+face_prob_score = 0.835
 
 class FaceDetectorMTCNN():
     class Inference(Inference):
@@ -93,7 +93,7 @@ class FaceDetectorMTCNN():
                                                     factor)
         if not len(bounding_boxes) == 0:
             for face in bounding_boxes:
-                if face[4] > 0.850:
+                if face[4] > face_prob_score:
                     det = np.squeeze(face[0:4])
                     bb = np.zeros(4, dtype=np.int32)
                     bb[0] = np.maximum(det[0] - margin / 2, 0)
@@ -103,7 +103,7 @@ class FaceDetectorMTCNN():
                     cropped = img[bb[1]:bb[3], bb[0]:bb[2], :]
                     resized = cv2.resize(cropped, (input_image_size, input_image_size), interpolation=cv2.INTER_CUBIC)
                     faces.append({'face': resized, 'rect': [bb[0], bb[1], bb[2], bb[3]]})
-
+        # print("len of faces", len(faces))
         self.__out_pipe.push((faces, inference))
 
     def stop(self):

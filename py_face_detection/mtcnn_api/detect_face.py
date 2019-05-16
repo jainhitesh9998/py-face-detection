@@ -283,18 +283,32 @@ def create_mtcnn(sess, model_path):
         data = tf.placeholder(tf.float32, (None,None,None,3), 'input')
         pnet = PNet({'data':data})
         pnet.load(os.path.join(model_path, 'det1.npy'), sess)
+        # builder = tf.saved_model.builder.SavedModelBuilder('/home/developer/Desktop/model')
+        # builder.add_meta_graph_and_variables(sess, [tf.saved_model.tag_constants.SERVING])
+        # builder.save()
     with tf.variable_scope('rnet'):
         data = tf.placeholder(tf.float32, (None,24,24,3), 'input')
         rnet = RNet({'data':data})
         rnet.load(os.path.join(model_path, 'det2.npy'), sess)
+        # builder = tf.saved_model.builder.SavedModelBuilder('/home/developer/Desktop/model')
+        # builder.add_meta_graph_and_variables(sess, [tf.saved_model.tag_constants.SERVING])
+        # builder.save()
     with tf.variable_scope('onet'):
+        output_graph = sess._graph
         data = tf.placeholder(tf.float32, (None,48,48,3), 'input')
         onet = ONet({'data':data})
         onet.load(os.path.join(model_path, 'det3.npy'), sess)
+        # builder = tf.saved_model.builder.SavedModelBuilder('/home/developer/Desktop/model')
+        # builder.add_meta_graph_and_variables(sess,[tf.saved_model.tag_constants.SERVING])
+        # builder.save()
+        # # f = tf.gfile.FastGFile('/home/developer/Desktop/onet.pb', "w")
+        # f.write(output_graph.as_graph_def().SerializeToString())
+        # f.close()
 
 
         
     pnet_fun = lambda img : sess.run(('pnet/conv4-2/BiasAdd:0', 'pnet/prob1:0'), feed_dict={'pnet/input:0':img})
+
     rnet_fun = lambda img : sess.run(('rnet/conv5-2/conv5-2:0', 'rnet/prob1:0'), feed_dict={'rnet/input:0':img})
     onet_fun = lambda img : sess.run(('onet/conv6-2/conv6-2:0', 'onet/conv6-3/conv6-3:0', 'onet/prob1:0'), feed_dict={'onet/input:0':img})
     return pnet_fun, rnet_fun, onet_fun
@@ -305,6 +319,7 @@ def detect_face(img, minsize, pnet, rnet, onet, threshold, factor):
     # pnet, rnet, onet: caffemodel
     # threshold: threshold=[th1 th2 th3], th1-3 are three steps's threshold
     # fastresize: resize img from last scale (using in high-resolution images) if fastresize==true
+    # print('pnet : ', pnet)
     factor_count=0
     total_boxes=np.empty((0,9))
     points=np.empty(0)
