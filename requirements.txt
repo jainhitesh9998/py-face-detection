@@ -1,0 +1,4 @@
+git+git://github.com/uniquetrij/py-pipe@v0.0.1
+git+git://github.com/uniquetrij/py-tensorflow-runner@v0.0.1
+git+git://github.com/uniquetrij/py-data@v0.0.2
+
