@@ -14,14 +14,14 @@ class EmbeddingGenerator:
         def __init__(self, input, return_pipe=None, meta_dict=None):
             super().__init__(input, return_pipe, meta_dict)
 
-    def __init__(self):
+    def __init__(self, face_size=160):
 
-        self.generator = FNEmbeddingsGenerator()
+        self.generator = FNEmbeddingsGenerator(face_resize=face_size)
         self.generator.use_threading()
         self.generator_ip = self.generator.get_in_pipe()
         self.generator_op = self.generator.get_out_pipe()
 
-        self.detector = FaceDetectorMTCNN()
+        self.detector = FaceDetectorMTCNN(face_resize = face_size)
         self.detector.use_threading()
         self.detector_ip = self.detector.get_in_pipe()
         self.detector_op = self.detector.get_out_pipe()
@@ -31,6 +31,7 @@ class EmbeddingGenerator:
         self.__out_pipe = Pipe(self.__out_pipe_process)
 
         self.__run_session_on_thread = False
+        self.__face_size=face_size
 
 
     def __in_pipe_process(self, inference):
@@ -65,7 +66,7 @@ class EmbeddingGenerator:
             if not ret:
                 continue
             image = inf.get_input()
-            image = imutils.resize(image, width=1080)
+            image = imutils.resize(image, width=None)
             inference = FaceDetectorMTCNN.Inference(image)
             inference.set_meta('EmbeddingGenerator.Inference', inf)
             self.detector_ip.push(inference)
@@ -78,13 +79,21 @@ class EmbeddingGenerator:
             ret, inference = self.detector_op.pull(True)
             if ret:
                 faces = inference.get_result()
+                # print("faces: ", faces)
                 inf = inference.get_meta('EmbeddingGenerator.Inference')
+                inf.set_meta('bbox', list())
                 if faces:
-                    face_image = faces[0]['face']
-                    inference = FNEmbeddingsGenerator.Inference(input=face_image)
-                    inf.set_meta('face_image', face_image)
+                    face_imgs = np.empty((len(faces), self.__face_size, self.__face_size, 3))
+                    for i in range(len(faces)):
+                        inf.get_meta('bbox').append(faces[i]['rect'])
+                        face_imgs[i,:,:,:] = faces[i]['face']
+                    inf.set_meta('face_image', face_imgs[0])
+
+                    inference = FNEmbeddingsGenerator.Inference(input=face_imgs)
                     inference.set_meta('EmbeddingGenerator.Inference', inf)
                     self.generator_ip.push(inference)
+                else:
+                    self.__out_pipe.push((None, inf))
         self.detector.stop()
         self.generator.stop()
 
@@ -93,10 +102,12 @@ class EmbeddingGenerator:
         while self.__thread:
             self.generator_op.pull_wait()
             ret, inference = self.generator_op.pull(True)
+            embedding = None
             if ret:
                 embedding = inference.get_result()
                 inference = inference.get_meta('EmbeddingGenerator.Inference')
-                self.__out_pipe.push((embedding, inference))
+                # print("shape emb",embedding.shape)
+            self.__out_pipe.push((embedding, inference))
         self.generator.stop()
 
     def __run(self):
