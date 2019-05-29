@@ -19,7 +19,7 @@ minsize = 20
 threshold = [0.6, 0.7, 0.7]
 factor = 0.709
 margin = 44
-input_image_size = 160
+
 
 
 class FNEmbeddingsGenerator:
@@ -28,7 +28,7 @@ class FNEmbeddingsGenerator:
         def __init__(self, input, return_pipe=None, meta_dict=None):
             super().__init__(input, return_pipe, meta_dict)
 
-    def __init__(self, model_name=PRETRAINED_20180408_102900, graph_prefix=None, flush_pipe_on_read=False):
+    def __init__(self, model_name=PRETRAINED_20180408_102900, graph_prefix=None, flush_pipe_on_read=False, face_resize = 160):
 
         facenet.load_model(facenet_path.get(model_name))
         self.__flush_pipe_on_read = flush_pipe_on_read
@@ -38,7 +38,7 @@ class FNEmbeddingsGenerator:
         self.__out_pipe = Pipe(self.__out_pipe_process)
 
         self.__run_session_on_thread = False
-
+        self.__face_resize = face_resize
         if not graph_prefix:
             self.__graph_prefix = ''
         else:
@@ -47,7 +47,7 @@ class FNEmbeddingsGenerator:
     def __in_pipe_process(self, inference):
         resized = inference.get_input()
         prewhitened = facenet.prewhiten(resized)
-        reshaped = prewhitened.reshape(-1, input_image_size, input_image_size, 3)
+        reshaped = prewhitened.reshape(-1, self.__face_resize, self.__face_resize, 3)
         # print(reshaped.shape)
         inference.set_data(reshaped)
         return inference

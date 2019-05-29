@@ -16,12 +16,12 @@ class EmbeddingGenerator:
 
     def __init__(self, face_size=160):
 
-        self.generator = FNEmbeddingsGenerator()
+        self.generator = FNEmbeddingsGenerator(face_resize=face_size)
         self.generator.use_threading()
         self.generator_ip = self.generator.get_in_pipe()
         self.generator_op = self.generator.get_out_pipe()
 
-        self.detector = FaceDetectorMTCNN()
+        self.detector = FaceDetectorMTCNN(face_resize = face_size)
         self.detector.use_threading()
         self.detector_ip = self.detector.get_in_pipe()
         self.detector_op = self.detector.get_out_pipe()

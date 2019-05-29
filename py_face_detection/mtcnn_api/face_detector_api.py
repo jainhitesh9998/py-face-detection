@@ -18,8 +18,8 @@ minsize = 30
 threshold = [0.6, 0.7, 0.7]
 factor = 0.709
 margin = 44
-input_image_size = 160
-face_prob_score = 0.835
+
+
 
 class FaceDetectorMTCNN():
     class Inference(Inference):
@@ -27,12 +27,14 @@ class FaceDetectorMTCNN():
         def __init__(self, input, return_pipe=None, meta_dict=None):
             super().__init__(input, return_pipe, meta_dict)
 
-    def __init__(self, graph_prefix=None, flush_pipe_on_read=False):
+    def __init__(self, graph_prefix=None, flush_pipe_on_read=False, face_prob_score = 0.835, face_resize = 160):
+        self.__face_prob_score = face_prob_score
         self.__flush_pipe_on_read = flush_pipe_on_read
 
         self.__thread = None
         self.__in_pipe = Pipe(self.__in_pipe_process)
         self.__out_pipe = Pipe(self.__out_pipe_process)
+        self.__face_resize = face_resize
 
         self.__run_session_on_thread = False
 
@@ -93,7 +95,7 @@ class FaceDetectorMTCNN():
                                                     factor)
         if not len(bounding_boxes) == 0:
             for face in bounding_boxes:
-                if face[4] > face_prob_score:
+                if face[4] > self.__face_prob_score:
                     det = np.squeeze(face[0:4])
                     bb = np.zeros(4, dtype=np.int32)
                     bb[0] = np.maximum(det[0] - margin / 2, 0)
@@ -101,7 +103,7 @@ class FaceDetectorMTCNN():
                     bb[2] = np.minimum(det[2] + margin / 2, img_size[1])
                     bb[3] = np.minimum(det[3] + margin / 2, img_size[0])
                     cropped = img[bb[1]:bb[3], bb[0]:bb[2], :]
-                    resized = cv2.resize(cropped, (input_image_size, input_image_size), interpolation=cv2.INTER_CUBIC)
+                    resized = cv2.resize(cropped, (self.__face_resize, self.__face_resize), interpolation=cv2.INTER_CUBIC)
                     faces.append({'face': resized, 'rect': [bb[0], bb[1], bb[2], bb[3]]})
         # print("len of faces", len(faces))
         self.__out_pipe.push((faces, inference))
