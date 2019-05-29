@@ -1,16 +1,11 @@
-from flask import Flask, json, Response
-from flask_cors import CORS
-import cv2
-from py_pipe.pipe import Pipe
-
+import requests
+from flask import Flask, jsonify
 from py_flask_movie.flask_movie import FlaskMovie
+from py_pipe.pipe import Pipe
 
 app = Flask(__name__)
 
-from threading import Thread
 import numpy as np
-
-import requests
 
 import cv2
 from py_tensorflow_runner.session_utils import SessionRunner
@@ -53,23 +48,23 @@ def get_cam_id():
 cam_dict = get_cam_id()
 
 caps = {
-    'BUILDING_IN': cv2.VideoCapture(cam_dict['D181B16F']),
-    'BUILDING_OUT': cv2.VideoCapture(cam_dict['811BF06F']),
+    'BUILDING_IN': cam_dict['D181B16F'],
+    'BUILDING_OUT': cam_dict['811BF06F'],
 }
 
-
 def capture(direction):
-    cap = caps[direction]
+    cap = cv2.VideoCapture(caps[direction])
     ret, image = cap.read()
     cap.release()
     return ret, image
 
-
 @app.route('/<emp_id>/<direction>')
 def processReq(emp_id, direction):
+    if emp_id not in emp.keys():
+        return jsonify({"result":"not-found"})
     ret, image = capture(direction)
     if not ret:
-        return Response(json.dumps("{'none': none }"), status=200, mimetype='application/json')
+        return jsonify({"result":"none"})
 
     inference = EmbeddingGenerator.Inference(image)
     generator_ip.push(inference)
@@ -81,12 +76,15 @@ def processReq(emp_id, direction):
         pipe.push(face_image)
         d = np.sqrt(np.sum(np.square(np.subtract(embedding, emp[emp_id]))))
         print(emp_id, d)
-        if d < 0.85:
-            requests.get("http://192.168.254.1:5000/turnstile", {'direction': direction})
-            return Response(json.dumps("{'result': valid }"), status=200, mimetype='application/json')
-        return Response(json.dumps("{'result': invalid }"), status=200, mimetype='application/json')
-    return Response(json.dumps("{'result': unknown }"), status=200, mimetype='application/json')
+        if d < 0.90:
+            requests.get("http://localhost:5000/turnstile?direction="+direction)
+            print("valid")
+            return jsonify({"result":"valid"})
+        print("invalid")
+        return jsonify({"result":"invalid"})
+    print("unknown")
+    return jsonify({"result":"unknown"})
 
 
 if __name__ == '__main__':
-    fs.start("0.0.0.0", 5000)
+    fs.start("0.0.0.0", 4500)
