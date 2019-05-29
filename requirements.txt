@@ -1,8 +1,4 @@
-matplotlib==3.0.2
-pillow==5.4.1
-
 git+git://github.com/uniquetrij/py-pipe@v0.0.1
-git+git://github.com/uniquetrij/py-flask-movie@v0.0.1
 git+git://github.com/uniquetrij/py-tensorflow-runner@v0.0.1
 git+git://github.com/uniquetrij/py-data@v0.0.2
 

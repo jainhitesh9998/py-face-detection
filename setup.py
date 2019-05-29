@@ -1,10 +1,9 @@
 from setuptools import setup, find_packages
-import pip
 
 setup(
     name='py_face_detection',
-    version='0.0.1',
-    description="Face detection API",
+    version='0.0.2',
+    description="Face detection using MTCNN and Face-Net",
     url='https://github.com/uniquetrij/py-face-detection',
     author='Trijeet Modak',
     author_email='uniquetrij@gmail.com',
