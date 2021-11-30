@@ -22,14 +22,17 @@ generator.run()
 #
 # cap = cv2.VideoCapture('/home/developer/Downloads/video.mp4')
 emb_dict = dict()
-images_list = glob.glob(images_path.get()+"/**/*.JPG")
+images_list = glob.glob(images_path.get()+"/**/*.jpg")
 print(images_list)
 image_dict = dict()
 for images in images_list:
-    person_name = images.split("/")[-2]
+    person_name = images.split("\\")[-2]
+    print(person_name)
     if person_name not in image_dict.keys():
         image_dict[person_name] = list()
     image_dict[person_name].append(images)
+
+print(image_dict)
 
 def read():
     for k, image_list in image_dict.items():
@@ -41,6 +44,7 @@ def read():
             inference = EmbeddingGenerator.Inference(imutils.resize(image, width=1080))
             inference.set_meta("person_name", k)
             generator_ip.push(inference)
+            sleep(1)
 
 
 def annotate(image, bboxs):
@@ -62,8 +66,11 @@ def run():
             print(person_name,type(embedding))
         else:
             pass
-        cv2.imshow("face", input_image)
-        cv2.waitKey(1)
+        # cv2.imshow("face", input_image)
+        # cv2.waitKey(1)
+        print("done")
+        # print(emb_dict)
+        pickle.dump(emb_dict, open(emb_path.get() + "/infy_v2_old.pickle", "wb"))
 
 if __name__ == '__main__':
     try:
@@ -72,5 +79,5 @@ if __name__ == '__main__':
     except:
         pass
     finally:
-        pickle.dump(emb_dict, open(emb_path.get() + "/infy_v2.pickle", "wb"))
+        pickle.dump(emb_dict, open(emb_path.get() + "/infy_v2_old.pickle", "wb"))
         print("writing pickle file")

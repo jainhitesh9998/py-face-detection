@@ -7,10 +7,12 @@ from py_face_detection.comparator_api.embedding_generator import EmbeddingGenera
 from proj_data.py_face_detection.embeddings import path as emb_path
 import pickle
 import numpy as np
+import time
 
 from py_face_detection.faiss_datastore.embeddings import Embeddings
 
-emb_dict = pickle.load(open(emb_path.get("infy_v2.pickle"), "rb"))
+emb_dict = pickle.load(open(emb_path.get("infy_v2_old.pickle"), "rb"))
+print(emb_dict)
 id_name_dict = dict()
 name_id_dict = dict()
 for i, key in enumerate(emb_dict.keys()):
@@ -23,14 +25,16 @@ data = []
 
 for k, items in emb_dict.items():
     for item in items:
-        data.append(item[0])
-        added_order.append(name_id_dict[k])
+        for it in item:
+            # data.append(item[0])
+            data.append(it)
+            added_order.append(name_id_dict[k])
 
 data = np.asarray(data)
 added_order = np.asarray(added_order)
 print(data.shape)
 print(added_order.shape)
-store = Embeddings(data, added_order, gpu=True, inbuilt_index=False)
+store = Embeddings(data, added_order, gpu=False, inbuilt_index=False)
 
 session_runner = SessionRunner()
 generator = EmbeddingGenerator()
@@ -55,6 +59,7 @@ def read():
 def annotate(image, bboxs, embeddings):
     for bbox, embedding in zip(bboxs,embeddings):
         identity_distance_dict = store.search(np.asarray([embedding]), len=5)
+        # print(identity_distance_dict)
         if identity_distance_dict["distance"][0] > 0.8:
             name = "Unknown"
         else:
@@ -66,6 +71,7 @@ def annotate(image, bboxs, embeddings):
 def run():
     while True:
         generator_op.pull_wait()
+        a = time.time()
         ret, inference = generator_op.pull(True)
         input_image = inference.get_input()
         if ret and inference.get_result() is  not None:
@@ -76,6 +82,7 @@ def run():
         else:
             pass
         cv2.imshow("face", input_image)
+
         cv2.waitKey(1)
 
 

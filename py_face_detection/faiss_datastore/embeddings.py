@@ -1,6 +1,6 @@
 import numpy as np
 import faiss
-GPU = faiss.StandardGpuResources()  # use a single GPU
+# GPU = faiss.StandardGpuResources()  # use a single GPU
 
 class Embeddings(object):
 
