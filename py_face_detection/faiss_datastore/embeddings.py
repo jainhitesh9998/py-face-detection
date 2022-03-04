@@ -4,7 +4,7 @@ import faiss
 
 class Embeddings(object):
 
-    def __init__(self, vectors, identifiers, dim=512, gpu=True, inbuilt_index=False):
+    def __init__(self, vectors, identifiers, dim=512, gpu=False, inbuilt_index=False):
         """
 
         :param vectors:
@@ -21,6 +21,7 @@ class Embeddings(object):
         self.__inbuilt_index = inbuilt_index
         self.__quantizer = faiss.IndexFlatL2(dim)  # the other index
 
+
         if self.__inbuilt_index:
             self.__indexmap = faiss.IndexIDMap2(self.__quantizer)
         else:
@@ -28,7 +29,6 @@ class Embeddings(object):
 
         if self.__gpu:
             self.__index = faiss.index_cpu_to_gpu(GPU, 0, self.__indexmap)
-
         else:
             self.__index = self.__indexmap
         self.__add()
@@ -73,7 +73,7 @@ class Embeddings(object):
         """
         ret = dict()
         D, I = self.__index.search(vector, len)
-        # print(D,I)
+        print(D,I)
         if self.__inbuilt_index:
             ret["identity"] = I[0]
         else:
@@ -89,7 +89,7 @@ class Embeddings(object):
         """
         if self.__gpu:
             raise Exception("UnsupportedMethod")
-        self.__index.remove_ids(np.array([idx]))
+        self.__index.remove_ids(np.array([idx]).astype("int64"))
 
     @staticmethod
     def validate(vector, idx):
